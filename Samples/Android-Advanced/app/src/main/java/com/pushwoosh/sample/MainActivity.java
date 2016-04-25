@@ -6,28 +6,60 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+//import android.widget.AdapterView.
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.ToggleButton;
+import android.widget.Toast;
+import org.json.JSONObject;
+import android.util.Pair;
+import android.provider.Settings.Secure;
+
+import java.io.*;
+import java.net.*;
+import java.util.*;
+import android.util.Base64;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.example.emarsysmobile.EmarsysMobile;
+
 
 import com.pushwoosh.PushManager;
 import com.pushwoosh.PushManager.RichPageListener;
 import com.pushwoosh.BasePushMessageReceiver;
 import com.pushwoosh.BaseRegistrationReceiver;
+import com.pushwoosh.inapp.InAppFacade;
+import com.pushwoosh.sample.ListItems;
+
 
 public class MainActivity extends Activity
 {
 	private TextView mGeneralStatus;
-	private Button mSendPushButton;
-	private ToggleButton mGeoPushButton;
-	private ToggleButton mBeaconPushButton;
+	//private Button mSendPushButton;
+	private Button mLoginButton;
+	private Button mAcceptPushButton;
+	private Button mSendAddCart;
+	private Button mCheckPoint;
+	private InAppFacade Event;
+	private String android_id;
+	private ListView mCatalog;
+
+	static final String[] Items = new String[] { "Apple", "Avocado", "Banana",
+			"Blueberry", "Coconut", "Durian", "Guava", "Kiwifruit",
+			"Jackfruit", "Mango", "Olive", "Pear", "Sugar-apple" };
 
 	/**
 	 * Called when the activity is first created.
@@ -39,31 +71,79 @@ public class MainActivity extends Activity
 
 		setContentView(R.layout.main);
 
-		mGeneralStatus = (TextView) findViewById(R.id.general_status);
-		mGeoPushButton = (ToggleButton) findViewById(R.id.butt_geo_pushes);
-		mBeaconPushButton = (ToggleButton) findViewById(R.id.butt_beacon_pushes);
-		mSendPushButton = (Button) findViewById(R.id.butt_send_push);
-		mSendPushButton.setEnabled(false);
+		android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
 
-		findViewById(R.id.butt_set_tags).setOnClickListener(new View.OnClickListener()
-		{
+		mGeneralStatus = (TextView) findViewById(R.id.general_status);
+		mLoginButton = (Button) findViewById(R.id.login);
+		mAcceptPushButton = (Button) findViewById(R.id.acceptPush);
+		mSendAddCart = (Button) findViewById(R.id.AddtoCart);
+		mCheckPoint = (Button) findViewById(R.id.checkpoint);
+
+		//mCatalog = (ListView) findViewById(R.id.catalogList);
+
+		//mCatalog.setOnItemClickListener(new OnItemClickListener() {
+
+		//	public void onItemClick(AdapterView<?> parent, View view,
+		//							int position, long id) {
+		//		Toast.makeText(getApplicationContext(),
+		//				"Click ListItem Number " + position, Toast.LENGTH_LONG).show();
+		//	}
+
+
+		//});
+
+		mSendAddCart.setOnClickListener(new View.OnClickListener() {
 			@Override
-			public void onClick(View v)
-			{
-				Intent intent = new Intent(MainActivity.this, SetTagsActivity.class);
-				startActivity(intent);
+			public void onClick(View v) {
+				Toast.makeText(MainActivity.this, "installEvent Sent", Toast.LENGTH_SHORT).show();
+				Event.postEvent(MainActivity.this, "Install Event", new HashMap<String, Object>());
+				new EmarsysMobile(MainActivity.this).execute();
 			}
 		});
 
-		mSendPushButton.setOnClickListener(new View.OnClickListener() {
+		mLoginButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(MainActivity.this, SendPushActivity.class);
-				startActivity(intent);
+				Toast.makeText(MainActivity.this, "LoginEvent Sent", Toast.LENGTH_SHORT).show();
+				new EmarsysMobile(MainActivity.this).login();
+			}
+		});
+
+		mAcceptPushButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(MainActivity.this, "AcceptPush Sent", Toast.LENGTH_SHORT).show();
+				new EmarsysMobile(MainActivity.this).acceptPush(MainActivity.this, PushManager.getPushToken(MainActivity.this).toString());
+
+			}
+		});
+
+		mCheckPoint.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Toast.makeText(MainActivity.this, "Checkpoint Sent", Toast.LENGTH_SHORT).show();
+				new EmarsysMobile(MainActivity.this).checkpoint("keypress");
 			}
 		});
 
 		initPushwoosh();
+		// Call the constructor -- calls install
+		//new EmarsysMobile(MainActivity.this).execute();
+
+		//EmarsysMobile app = new EmarsysMobile(this);
+		//app.execute("g");
+
+        Toast.makeText(MainActivity.this, "appOpen Sent", Toast.LENGTH_SHORT).show();
+        Event.postEvent(MainActivity.this, "appOpen", new HashMap<String, Object>());
+
+	}
+
+
+
+	private void SendLogin() throws IOException {
+
+		Log.d("Emarsys", "MobileEvent");
+
 	}
 
 	private void initPushwoosh()
@@ -125,6 +205,7 @@ public class MainActivity extends Activity
 		//The commented code below shows how to use local notifications
 		//PushManager.clearLocalNotifications(this);
 
+
 		//easy way
 		//PushManager.scheduleLocalNotification(this, "Your pumpkins are ready!", 30);
 
@@ -138,26 +219,27 @@ public class MainActivity extends Activity
 		//pushManager.setBadgeNumber(0);
 
 		// Start/stop geo pushes
-		mGeoPushButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					pushManager.startTrackingGeoPushes();
-				} else {
-					pushManager.stopTrackingGeoPushes();
-				}
-			}
-		});
+//		mGeoPushButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//				if (isChecked) {
+//					pushManager.startTrackingGeoPushes();
+//				} else {
+//					pushManager.stopTrackingGeoPushes();
+//				}
+//			}
+//		});
 
 		// Start/stop beacon pushes
-		mBeaconPushButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if (isChecked) {
-					pushManager.startTrackingBeaconPushes();
-				} else {
-					pushManager.stopTrackingBeaconPushes();
-				}
-			}
-		});
+//		mBeaconPushButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//				if (isChecked) {
+//					pushManager.startTrackingBeaconPushes();
+//				} else {
+//					pushManager.stopTrackingBeaconPushes();
+//
+//				}
+//			}
+//		});
 	}
 
 	/**
@@ -234,6 +316,10 @@ public class MainActivity extends Activity
 	@Override
 	public void onPause()
 	{
+
+        Toast.makeText(MainActivity.this, "close_app Sent", Toast.LENGTH_SHORT).show();
+        Event.postEvent(MainActivity.this, "close_app", new HashMap<String, Object>());
+
 		super.onPause();
 
 		//Unregister receivers on pause
@@ -277,7 +363,6 @@ public class MainActivity extends Activity
 	public void doOnRegistered(String registrationId)
 	{
 		mGeneralStatus.setText(getString(R.string.registered, registrationId));
-		mSendPushButton.setEnabled(true);
 	}
 
 	public void doOnRegisteredError(String errorId)
@@ -297,6 +382,9 @@ public class MainActivity extends Activity
 
 	public void doOnMessageReceive(String message)
 	{
+
+		Log.d("Emarsys","in doOnMessageReceive");
+
 		mGeneralStatus.setText(getString(R.string.on_message, message));
 
 		// Parse custom JSON data string.
@@ -304,8 +392,15 @@ public class MainActivity extends Activity
 		// Or open specific screen of the app with custom page ID (set ID in the { "id" : "2" } format)
 		try
 		{
+
+
 			JSONObject messageJson = new JSONObject(message);
 			JSONObject customJson = new JSONObject(messageJson.getString("u"));
+
+			Log.d("Emarsys", "messageJson: " + messageJson.toString() );
+			Log.d("Emarsys", "sid: " + customJson.toString());
+
+			new EmarsysMobile(MainActivity.this).open(customJson.getString("sid"));
 
 			if (customJson.has("r") && customJson.has("g") && customJson.has("b"))
 			{
@@ -324,6 +419,8 @@ public class MainActivity extends Activity
 		}
 		catch (JSONException e)
 		{
+			Log.d("Emarsys", "No Custom data!");
+			new EmarsysMobile(MainActivity.this).open("null");
 			// No custom JSON. Pass this exception
 		}
 	}
