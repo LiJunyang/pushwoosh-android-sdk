@@ -127,7 +127,7 @@ Context EmarsysContext;
         return null;
     }
 
-    public EmarsysMobile checkpoint(String event){
+    public EmarsysMobile checkpoint(String event, JSONObject data){
 
         try {
             endpoint = new URL("https://push.eservice.emarsys.net/api/sdk/events/checkpoint/"+ event);
@@ -141,6 +141,12 @@ Context EmarsysContext;
         try {
             postdata.put("application_id",AppID);
             postdata.put("hardware_id", android_id);
+
+            if (data != null)
+            {
+                postdata.put("attributes", data);
+            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -165,7 +171,11 @@ Context EmarsysContext;
         try {
             postdata.put("application_id",AppID);
             postdata.put("hardware_id", android_id);
-            postdata.put("sid", msg_id);
+
+            if (msg_id != "null") {
+                postdata.put("sid", msg_id);
+            }
+
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -226,7 +236,9 @@ Context EmarsysContext;
     }
 
 
-    public EmarsysMobile login(){
+
+
+    public EmarsysMobile login(int mergefield, JSONObject contactdata ){
         try {
             endpoint = new URL("https://push.eservice.emarsys.net/api/sdk/events/login");
         } catch (MalformedURLException e) {
@@ -234,8 +246,6 @@ Context EmarsysContext;
         }
 
         postdata = new JSONObject();
-        JSONObject contactdata =  new JSONObject();
-
         List<Pair<String, String>> params = new ArrayList<>();
         try {
             postdata.put("application_id",AppID);
@@ -244,10 +254,6 @@ Context EmarsysContext;
             postdata.put("os_version", "7.1");
             postdata.put("app_version", "1.0");
             postdata.put("merge_by_field", "3");
-
-            contactdata.put("1", "David");
-            contactdata.put("2", "Galante");
-            contactdata.put("3", "galante@email.com");
 
             postdata.put("contact_fields", contactdata);
 
@@ -260,6 +266,17 @@ Context EmarsysContext;
         this.execute();
 
 
+        return null;
+    }
+
+    public EmarsysMobile logout(){
+        try {
+            endpoint = new URL("https://push.eservice.emarsys.net/api/sdk/events/logout");
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        }
+        Log.d("Emarsys", "in logout()");
+        this.execute();
         return null;
     }
 

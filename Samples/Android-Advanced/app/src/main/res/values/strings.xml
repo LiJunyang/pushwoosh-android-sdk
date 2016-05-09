@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Pushwoosh Sample</string>
+    <string name="app_name">Lifestyle Labels</string>
 
     <string name="pw_logo">PushWoosh logo</string>
 
@@ -36,4 +36,5 @@
     <string name="send_push">Send push</string>
     <string name="title_activity_send_push">SendPushActivity</string>
     <string name="api_access_token">mTdns0j6qLYPa/A5htmD46xVyoxdVQfPBz7NRqYYHz9PhvKXgJtOkAY+yo0YTXDEoztQAJFY0JmXnd89tf59</string>
+    <string name="dress">Dress</string>
 </resources>

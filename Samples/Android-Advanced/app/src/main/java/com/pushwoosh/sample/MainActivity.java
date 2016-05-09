@@ -16,6 +16,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -48,11 +49,16 @@ import com.pushwoosh.sample.ListItems;
 public class MainActivity extends Activity
 {
 	private TextView mGeneralStatus;
-	//private Button mSendPushButton;
+	private EditText mfirstname;
+	private EditText mlastname;
+	private EditText memail;
+
 	private Button mLoginButton;
+	private Button mLogoutButton;
 	private Button mAcceptPushButton;
 	private Button mSendAddCart;
 	private Button mCheckPoint;
+
 	private InAppFacade Event;
 	private String android_id;
 	private ListView mCatalog;
@@ -74,40 +80,79 @@ public class MainActivity extends Activity
 		android_id = Secure.getString(this.getContentResolver(), Secure.ANDROID_ID);
 
 		mGeneralStatus = (TextView) findViewById(R.id.general_status);
+		mfirstname = (EditText) findViewById(R.id.fname);
+		mlastname = (EditText) findViewById(R.id.lname);
+		memail = (EditText) findViewById(R.id.email);
+
 		mLoginButton = (Button) findViewById(R.id.login);
+		mLogoutButton = (Button) findViewById(R.id.logout);
 		mAcceptPushButton = (Button) findViewById(R.id.acceptPush);
 		mSendAddCart = (Button) findViewById(R.id.AddtoCart);
 		mCheckPoint = (Button) findViewById(R.id.checkpoint);
 
-		//mCatalog = (ListView) findViewById(R.id.catalogList);
-
-		//mCatalog.setOnItemClickListener(new OnItemClickListener() {
-
-		//	public void onItemClick(AdapterView<?> parent, View view,
-		//							int position, long id) {
-		//		Toast.makeText(getApplicationContext(),
-		//				"Click ListItem Number " + position, Toast.LENGTH_LONG).show();
-		//	}
-
-
-		//});
-
 		mSendAddCart.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(MainActivity.this, "installEvent Sent", Toast.LENGTH_SHORT).show();
-				Event.postEvent(MainActivity.this, "Install Event", new HashMap<String, Object>());
-				new EmarsysMobile(MainActivity.this).execute();
+				Toast.makeText(MainActivity.this, "AddtoCart Sent", Toast.LENGTH_SHORT).show();
+				Event.postEvent(MainActivity.this, "AddtoCart", new HashMap<String, Object>());
+
+				new EmarsysMobile(MainActivity.this).checkpoint("AddtoCart", null);
 			}
 		});
 
 		mLoginButton.setOnClickListener(new View.OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			Toast.makeText(MainActivity.this, "LoginEvent Sent", Toast.LENGTH_SHORT).show();
+
+			JSONObject contactdata =  new JSONObject();
+
+
+			if (  (mfirstname.getText() != null) &&  (mlastname.getText() != null)  && (memail.getText() != null)  ){
+
+				List<Pair<String, String>> params = new ArrayList<>();
+				try {
+					contactdata.put("1", mfirstname.getText().toString());
+					contactdata.put("2", mlastname.getText().toString());
+					contactdata.put("3", memail.getText().toString());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+
+				mfirstname.setFocusable(false);
+				mlastname.setFocusable(false);
+				memail.setFocusable(false);
+
+				new EmarsysMobile(MainActivity.this).login( 3, contactdata );
+
+			} else {
+
+				Toast.makeText(MainActivity.this, "First and Last name required!", Toast.LENGTH_SHORT).show();
+
+			}
+
+
+		}
+	    });
+
+		mLogoutButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(MainActivity.this, "LoginEvent Sent", Toast.LENGTH_SHORT).show();
-				new EmarsysMobile(MainActivity.this).login();
+				Toast.makeText(MainActivity.this, "LogoutEvent Sent", Toast.LENGTH_SHORT).show();
+
+					mfirstname.setFocusable(true);
+					mfirstname.setClickable(true);
+
+					mlastname.setFocusable(true);
+					mlastname.setClickable(true);
+
+					memail.setFocusable(true);
+					memail.setClickable(true);
+
+					new EmarsysMobile(MainActivity.this).logout();
 			}
 		});
+
 
 		mAcceptPushButton.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -121,8 +166,19 @@ public class MainActivity extends Activity
 		mCheckPoint.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Toast.makeText(MainActivity.this, "Checkpoint Sent", Toast.LENGTH_SHORT).show();
-				new EmarsysMobile(MainActivity.this).checkpoint("keypress");
+				Toast.makeText(MainActivity.this, "CheckoutSuccessful", Toast.LENGTH_SHORT).show();
+
+				JSONObject eventdata = new JSONObject();
+
+				List<Pair<String, String>> params = new ArrayList<>();
+				try {
+					eventdata.put("currency","EUR");
+					eventdata.put("amount", "50.00");
+					eventdata.put("recipient_id", "WR187298216");
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+				new EmarsysMobile(MainActivity.this).checkpoint("CheckoutSuccessful", eventdata);
 			}
 		});
 
@@ -307,6 +363,11 @@ public class MainActivity extends Activity
 	@Override
 	public void onResume()
 	{
+
+
+		Toast.makeText(MainActivity.this, "install Sent", Toast.LENGTH_SHORT).show();
+		new EmarsysMobile(MainActivity.this).install();
+
 		super.onResume();
 
 		//Re-register receivers on resume
