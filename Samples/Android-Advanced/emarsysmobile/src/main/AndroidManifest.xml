@@ -6,8 +6,8 @@
         android:label="@string/app_name"
         android:supportsRtl="true">
 
-        <meta-data android:name="auth_token" android:value="jXj5rtes8tOj26+iC+mBS55CO8yD0fi8" />
-        <meta-data android:name="app_id" android:value="DEEF8-210C5" />
+        <meta-data android:name="auth_token" android:value="INSERT_TOKEN" />
+        <meta-data android:name="app_id" android:value="INSERT_APP_ID" />
     </application>
 
 </manifest>
