@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">EmarsysMobile</string>
+    <string name="auth_token">EmarsysMobile</string>
+    <string name="app_id">EmarsysMobile</string>
 </resources>

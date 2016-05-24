@@ -25,6 +25,7 @@ import android.widget.Toast;
 import org.json.JSONObject;
 import android.util.Pair;
 import android.provider.Settings.Secure;
+import android.telephony.TelephonyManager;
 
 import java.io.*;
 import java.net.*;
@@ -96,7 +97,7 @@ public class MainActivity extends Activity
 				Toast.makeText(MainActivity.this, "AddtoCart Sent", Toast.LENGTH_SHORT).show();
 				Event.postEvent(MainActivity.this, "AddtoCart", new HashMap<String, Object>());
 
-				new EmarsysMobile(MainActivity.this).checkpoint("AddtoCart", null);
+				new EmarsysMobile(MainActivity.this).event("AddtoCart", null);
 			}
 		});
 
@@ -107,14 +108,21 @@ public class MainActivity extends Activity
 
 			JSONObject contactdata =  new JSONObject();
 
+			// Get System TELEPHONY service reference
+			TelephonyManager tManager = (TelephonyManager) getBaseContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+			// Get carrier name (Network Operator Name)
+			String carrierName = tManager.getNetworkOperatorName();
 
 			if (  (mfirstname.getText() != null) &&  (mlastname.getText() != null)  && (memail.getText() != null)  ){
 
 				List<Pair<String, String>> params = new ArrayList<>();
 				try {
-					contactdata.put("1", mfirstname.getText().toString());
-					contactdata.put("2", mlastname.getText().toString());
-					contactdata.put("3", memail.getText().toString());
+					contactdata.put("1", mfirstname.getText().toString()); //Update First Name
+					contactdata.put("2", mlastname.getText().toString());  //Update Last Name
+					contactdata.put("3", memail.getText().toString());     //Update email address
+					//contactdata.put("11790212", carrierName);     		   //Update current network provider
+
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
@@ -123,7 +131,7 @@ public class MainActivity extends Activity
 				mlastname.setFocusable(false);
 				memail.setFocusable(false);
 
-				new EmarsysMobile(MainActivity.this).login( 3, contactdata );
+				new EmarsysMobile(MainActivity.this).contact_update( 3, contactdata );
 
 			} else {
 
@@ -178,7 +186,7 @@ public class MainActivity extends Activity
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}
-				new EmarsysMobile(MainActivity.this).checkpoint("CheckoutSuccessful", eventdata);
+				new EmarsysMobile(MainActivity.this).event("CheckoutSuccessful", eventdata);
 			}
 		});
 
@@ -364,9 +372,8 @@ public class MainActivity extends Activity
 	public void onResume()
 	{
 
-
 		Toast.makeText(MainActivity.this, "install Sent", Toast.LENGTH_SHORT).show();
-		new EmarsysMobile(MainActivity.this).install();
+		new EmarsysMobile(MainActivity.this).app_launch(MainActivity.this);
 
 		super.onResume();
 
@@ -461,7 +468,7 @@ public class MainActivity extends Activity
 			Log.d("Emarsys", "messageJson: " + messageJson.toString() );
 			Log.d("Emarsys", "sid: " + customJson.toString());
 
-			new EmarsysMobile(MainActivity.this).open(customJson.getString("sid"));
+			new EmarsysMobile(MainActivity.this).message_open(customJson.getString("sid"));
 
 			if (customJson.has("r") && customJson.has("g") && customJson.has("b"))
 			{
@@ -481,7 +488,7 @@ public class MainActivity extends Activity
 		catch (JSONException e)
 		{
 			Log.d("Emarsys", "No Custom data!");
-			new EmarsysMobile(MainActivity.this).open("null");
+			new EmarsysMobile(MainActivity.this).message_open("null");
 			// No custom JSON. Pass this exception
 		}
 	}
