@@ -1,4 +1,4 @@
-## Overall
+## What is the Emarsys Mobile CRM SDK?
 The Emarsys Mobile CRM SDK allows developers with a simple interface between their mobile app and the Emarsys Mobile Engage solution.
 
 The Emarsys Mobile SDK is designed to work with the PushWoosh push SDK which can be found here: https://github.com/Pushwoosh/pushwoosh-android-sdk
